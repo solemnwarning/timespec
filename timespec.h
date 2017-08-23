@@ -34,6 +34,10 @@
 #include <sys/time.h>
 #include <time.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct timespec timespec_add(struct timespec ts1, struct timespec ts2);
 struct timespec timespec_sub(struct timespec ts1, struct timespec ts2);
 
@@ -51,5 +55,9 @@ struct timespec timespec_from_ms(long milliseconds);
 long timespec_to_ms(struct timespec ts);
 
 struct timespec timespec_normalise(struct timespec ts);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !DAN_TIMESPEC_H */
