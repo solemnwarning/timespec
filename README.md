@@ -86,7 +86,7 @@ Converts a timespec to a timeval.
 Returns a normalised version of a timespec structure, according to the following
 rules:
 
-1. If tv_nsec is >1,000,000,00 or <-1,000,000,000, flatten the surplus
+1. If tv_nsec is >=1,000,000,000 or <=-1,000,000,000, flatten the surplus
    nanoseconds into the tv_sec field.
 
 2. If tv_sec is >0 and tv_nsec is <0, decrement tv_sec and roll tv_nsec up to
