@@ -47,6 +47,8 @@ struct timespec timespec_from_double(double s);
 double timespec_to_double(struct timespec ts);
 struct timespec timespec_from_timeval(struct timeval tv);
 struct timeval timespec_to_timeval(struct timespec ts);
+struct timespec timespec_from_ms(long milliseconds);
+long timespec_to_ms(struct timespec ts);
 
 struct timespec timespec_normalise(struct timespec ts);
 

@@ -79,6 +79,14 @@ Converts a timeval to a timespec.
 
 Converts a timespec to a timeval.
 
+`struct timespec timespec_from_ms(long milliseconds)`
+
+Converts an integer number of milliseconds to a timespec.
+
+`long timespec_to_ms(struct timespec ts)`
+
+Converts a timespec to an integer number of milliseconds.
+
 ## Normalisation
 
 `struct timespec timespec_normalise(struct timespec ts)`

@@ -183,6 +183,27 @@ struct timeval timespec_to_timeval(struct timespec ts)
 	return tv;
 }
 
+/** \fn struct timespec timespec_from_ms(long milliseconds)
+ *  \brief Converts an integer number of milliseconds to a timespec.
+*/
+struct timespec timespec_from_ms(long milliseconds)
+{
+	struct timespec ts = {
+		.tv_sec  = (milliseconds / 1000),
+		.tv_nsec = (milliseconds % 1000) * 1000000,
+	};
+	
+	return timespec_normalise(ts);
+}
+
+/** \fn long timespec_to_ms(struct timespec ts)
+ *  \brief Converts a timespec to an integer number of milliseconds.
+*/
+long timespec_to_ms(struct timespec ts)
+{
+	return (ts.tv_sec * 1000) + (ts.tv_nsec / 1000000);
+}
+
 /** \fn struct timespec timespec_normalise(struct timespec ts)
  *  \brief Normalises a timespec structure.
  *
@@ -330,6 +351,28 @@ struct timespec timespec_normalise(struct timespec ts)
 		printf("timespec_to_timeval({%ld, %ld}) returned wrong values\n", (long)(ts_sec), (long)(ts_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_usec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_usec)); \
+		result = 1; \
+	} \
+}
+
+#define TEST_FROM_MS(msecs, expect_sec, expect_nsec) { \
+	struct timespec got = timespec_from_ms(msecs);  \
+	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
+	{ \
+		printf("timespec_from_ms(%ld) returned wrong values\n", (long)(msecs)); \
+		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
+		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
+		result = 1; \
+	} \
+}
+
+#define TEST_TO_MS(ts_sec, ts_nsec, expect) { \
+	struct timespec ts = { .tv_sec = ts_sec, .tv_nsec = ts_nsec }; \
+	long got = timespec_to_ms(ts); \
+	if(got != expect) { \
+		printf("timespec_to_ms({%ld, %ld}) returned wrong value\n", (long)(ts_sec), (long)(ts_nsec)); \
+		printf("    Expected: %ld\n", (long)(expect)); \
+		printf("    Got:      %ld\n", got); \
 		result = 1; \
 	} \
 }
@@ -497,6 +540,27 @@ int main()
 	TEST_TO_TIMEVAL(1,1500000000,   2,500000);
 	TEST_TO_TIMEVAL(1,-1500000000,  0,-500000);
 	TEST_TO_TIMEVAL(-1,-1500000000, -2,-500000);
+	
+	// timespec_from_ms
+	
+	TEST_FROM_MS(0,     0,0);
+	TEST_FROM_MS(1,     0,1000000);
+	TEST_FROM_MS(-1,    0,-1000000);
+	TEST_FROM_MS(1500,  1,500000000);
+	TEST_FROM_MS(-1000, -1,0);
+	TEST_FROM_MS(-1500, -1,-500000000);
+	
+	// timespec_to_ms
+	
+	TEST_TO_MS(0,0,            0);
+	TEST_TO_MS(10,0,           10000);
+	TEST_TO_MS(-10,0,          -10000);
+	TEST_TO_MS(0,500000000,    500);
+	TEST_TO_MS(0,-500000000,   -500);
+	TEST_TO_MS(10,500000000,   10500);
+	TEST_TO_MS(10,-500000000,  9500);
+	TEST_TO_MS(-10,500000000,  -9500);
+	TEST_TO_MS(-10,-500000000, -10500);
 	
 	// timespec_normalise
 	
