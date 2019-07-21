@@ -60,6 +60,8 @@
 
 #include "timespec.h"
 
+#define NSEC_PER_SEC 1000000000
+
 /** \fn struct timespec timespec_add(struct timespec ts1, struct timespec ts2)
  *  \brief Returns the result of adding two timespec structures.
 */
@@ -141,7 +143,7 @@ struct timespec timespec_from_double(double s)
 {
 	struct timespec ts = {
 		.tv_sec  = s,
-		.tv_nsec = (s - (long)(s)) * 1000000000,
+		.tv_nsec = (s - (long)(s)) * NSEC_PER_SEC,
 	};
 	
 	return timespec_normalise(ts);
@@ -152,7 +154,7 @@ struct timespec timespec_from_double(double s)
 */
 double timespec_to_double(struct timespec ts)
 {
-	return ((double)(ts.tv_sec) + ((double)(ts.tv_nsec) / 1000000000));
+	return ((double)(ts.tv_sec) + ((double)(ts.tv_nsec) / NSEC_PER_SEC));
 }
 
 /** \fn struct timespec timespec_from_timeval(struct timeval tv)
@@ -221,16 +223,16 @@ long timespec_to_ms(struct timespec ts)
 */
 struct timespec timespec_normalise(struct timespec ts)
 {
-	while(ts.tv_nsec >= 1000000000)
+	while(ts.tv_nsec >= NSEC_PER_SEC)
 	{
 		++(ts.tv_sec);
-		ts.tv_nsec -= 1000000000;
+		ts.tv_nsec -= NSEC_PER_SEC;
 	}
 	
-	while(ts.tv_nsec <= -1000000000)
+	while(ts.tv_nsec <= -NSEC_PER_SEC)
 	{
 		--(ts.tv_sec);
-		ts.tv_nsec += 1000000000;
+		ts.tv_nsec += NSEC_PER_SEC;
 	}
 	
 	if(ts.tv_nsec < 0 && ts.tv_sec > 0)
@@ -240,7 +242,7 @@ struct timespec timespec_normalise(struct timespec ts)
 		*/
 		
 		--(ts.tv_sec);
-		ts.tv_nsec = 1000000000 - (-1 * ts.tv_nsec);
+		ts.tv_nsec = NSEC_PER_SEC - (-1 * ts.tv_nsec);
 	}
 	else if(ts.tv_nsec > 0 && ts.tv_sec < 0)
 	{
@@ -249,7 +251,7 @@ struct timespec timespec_normalise(struct timespec ts)
 		*/
 		
 		++(ts.tv_sec);
-		ts.tv_nsec = -1000000000 - (-1 * ts.tv_nsec);
+		ts.tv_nsec = -NSEC_PER_SEC - (-1 * ts.tv_nsec);
 	}
 	
 	return ts;
