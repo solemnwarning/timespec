@@ -39,6 +39,10 @@ Returns the result of adding two timespec structures.
 
 Returns the result of subtracting ts2 from ts1.
 
+`struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)`
+
+Returns the remainder left over after dividing ts1 by ts2.
+
 ## Comparison functions
 
 `bool timespec_eq(struct timespec ts1, struct timespec ts2)`
