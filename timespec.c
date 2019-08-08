@@ -1,5 +1,6 @@
 /* Functions for working with timespec structures
  * Written by Daniel Collins (2017)
+ * timespec_mod by Alex Forencich (2019)
  * 
  * This is free and unencumbered software released into the public domain.
  *
@@ -54,11 +55,14 @@
  * is normalised according to the rules in timespec_normalise().
 */
 
+#include <limits.h>
 #include <stdbool.h>
 #include <sys/time.h>
 #include <time.h>
 
 #include "timespec.h"
+
+#define NSEC_PER_SEC 1000000000
 
 /** \fn struct timespec timespec_add(struct timespec ts1, struct timespec ts2)
  *  \brief Returns the result of adding two timespec structures.
@@ -92,6 +96,99 @@ struct timespec timespec_sub(struct timespec ts1, struct timespec ts2)
 	ts1.tv_nsec -= ts2.tv_nsec;
 	
 	return timespec_normalise(ts1);
+}
+
+/** \fn struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)
+ *  \brief Returns the remainder left over after dividing ts1 by ts2 (ts1%ts2).
+*/
+struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)
+{
+	int i = 0;
+	bool neg1 = false;
+	bool neg2 = false;
+
+	/* Normalise inputs to prevent tv_nsec rollover if whole-second values
+	 * are packed in it.
+	*/
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+
+	/* If ts2 is zero, just return ts1
+	*/
+	if (ts2.tv_sec == 0 && ts2.tv_nsec == 0)
+	{
+		return ts1;
+	}
+
+	/* If inputs are negative, flip and record sign
+	*/
+	if (ts1.tv_sec < 0 || ts1.tv_nsec < 0)
+	{
+		neg1 = true;
+		ts1.tv_sec = -ts1.tv_sec;
+		ts1.tv_nsec = -ts1.tv_nsec;
+	}
+
+	if (ts2.tv_sec < 0 || ts2.tv_nsec < 0)
+	{
+		neg2 = true;
+		ts2.tv_sec = -ts2.tv_sec;
+		ts2.tv_nsec = -ts2.tv_nsec;
+	}
+
+	/* Shift ts2 until it is larger than ts1 or is about to overflow
+	*/
+	while ((ts2.tv_sec < (LONG_MAX >> 1)) && timespec_ge(ts1, ts2))
+	{
+		i++;
+		ts2.tv_nsec <<= 1;
+		ts2.tv_sec <<= 1;
+        if (ts2.tv_nsec > NSEC_PER_SEC)
+        {
+            ts2.tv_nsec -= NSEC_PER_SEC;
+            ts2.tv_sec++;
+        }
+	}
+
+	/* Division by repeated subtraction
+	*/
+	while (i >= 0)
+	{
+		if (timespec_ge(ts1, ts2))
+		{
+			ts1 = timespec_sub(ts1, ts2);
+		}
+
+		if (i == 0)
+		{
+			break;
+		}
+
+		i--;
+		if (ts2.tv_sec & 1)
+		{
+			ts2.tv_nsec += NSEC_PER_SEC;
+		}
+		ts2.tv_nsec >>= 1;
+		ts2.tv_sec >>= 1;
+	}
+
+	/* If signs differ and result is nonzero, subtract once more to cross zero
+	*/
+	if (neg1 ^ neg2 && (ts1.tv_sec != 0 || ts1.tv_nsec != 0))
+	{
+		ts1 = timespec_sub(ts1, ts2);
+	}
+
+	/* Restore sign
+	*/
+	if (neg1)
+	{
+		ts1.tv_sec = -ts1.tv_sec;
+		ts1.tv_nsec = -ts1.tv_nsec;
+	}
+
+	return ts1;
 }
 
 /** \fn bool timespec_eq(struct timespec ts1, struct timespec ts2)
@@ -141,7 +238,7 @@ struct timespec timespec_from_double(double s)
 {
 	struct timespec ts = {
 		.tv_sec  = s,
-		.tv_nsec = (s - (long)(s)) * 1000000000,
+		.tv_nsec = (s - (long)(s)) * NSEC_PER_SEC,
 	};
 	
 	return timespec_normalise(ts);
@@ -152,7 +249,7 @@ struct timespec timespec_from_double(double s)
 */
 double timespec_to_double(struct timespec ts)
 {
-	return ((double)(ts.tv_sec) + ((double)(ts.tv_nsec) / 1000000000));
+	return ((double)(ts.tv_sec) + ((double)(ts.tv_nsec) / NSEC_PER_SEC));
 }
 
 /** \fn struct timespec timespec_from_timeval(struct timeval tv)
@@ -221,16 +318,16 @@ long timespec_to_ms(struct timespec ts)
 */
 struct timespec timespec_normalise(struct timespec ts)
 {
-	while(ts.tv_nsec >= 1000000000)
+	while(ts.tv_nsec >= NSEC_PER_SEC)
 	{
 		++(ts.tv_sec);
-		ts.tv_nsec -= 1000000000;
+		ts.tv_nsec -= NSEC_PER_SEC;
 	}
 	
-	while(ts.tv_nsec <= -1000000000)
+	while(ts.tv_nsec <= -NSEC_PER_SEC)
 	{
 		--(ts.tv_sec);
-		ts.tv_nsec += 1000000000;
+		ts.tv_nsec += NSEC_PER_SEC;
 	}
 	
 	if(ts.tv_nsec < 0 && ts.tv_sec > 0)
@@ -240,7 +337,7 @@ struct timespec timespec_normalise(struct timespec ts)
 		*/
 		
 		--(ts.tv_sec);
-		ts.tv_nsec = 1000000000 - (-1 * ts.tv_nsec);
+		ts.tv_nsec = NSEC_PER_SEC - (-1 * ts.tv_nsec);
 	}
 	else if(ts.tv_nsec > 0 && ts.tv_sec < 0)
 	{
@@ -249,7 +346,7 @@ struct timespec timespec_normalise(struct timespec ts)
 		*/
 		
 		++(ts.tv_sec);
-		ts.tv_nsec = -1000000000 - (-1 * ts.tv_nsec);
+		ts.tv_nsec = -NSEC_PER_SEC - (-1 * ts.tv_nsec);
 	}
 	
 	return ts;
@@ -291,6 +388,20 @@ struct timespec timespec_normalise(struct timespec ts)
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
 		printf("timespec_sub({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
+			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
+		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
+		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
+		result = 1; \
+	} \
+}
+
+#define TEST_MOD(ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect_sec, expect_nsec) { \
+	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
+	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
+	struct timespec got = timespec_mod(ts1, ts2); \
+	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
+	{ \
+		printf("timespec_mod({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
@@ -408,6 +519,33 @@ int main()
 	TEST_SUB(0,0,         1,500000000, -1,-500000000);
 	TEST_SUB(1,0,         1,500000000, 0,-500000000);
 	TEST_SUB(1,0,         1,499999999, 0,-499999999);
+
+	// timespec_mod
+
+	TEST_MOD(0,0,         0,0,         0,0);
+	TEST_MOD(0,0,         1,0,         0,0);
+	TEST_MOD(1,0,         0,0,         1,0);
+	TEST_MOD(1,0,         1,0,         0,0);
+	TEST_MOD(10,0,        1,0,         0,0);
+	TEST_MOD(10,0,        3,0,         1,0);
+	TEST_MOD(10,0,        -3,0,        -2,0);
+	TEST_MOD(-10,0,       3,0,         2,0);
+	TEST_MOD(-10,0,       -3,0,        -1,0);
+	TEST_MOD(10,0,        5,0,         0,0);
+	TEST_MOD(10,0,        -5,0,        0,0);
+	TEST_MOD(-10,0,       5,0,         0,0);
+	TEST_MOD(-10,0,       -5,0,        0,0);
+	TEST_MOD(1,500000000, 0,500000000, 0,0);
+	TEST_MOD(5,500000000, 2,999999999, 2,500000001);
+	TEST_MOD(0,500000000, 1,500000000, 0,500000000);
+	TEST_MOD(0,0,         1,500000000, 0,0);
+	TEST_MOD(1,0,         1,500000000, 1,0);
+	TEST_MOD(1,0,         0,1,         0,0);
+	TEST_MOD(1,123456789, 0,1000,      0,789);
+	TEST_MOD(1,0,         0,9999999,   0,100);
+	TEST_MOD(12345,54321, 0,100001,    0,5555);
+	TEST_MOD(LONG_MAX,0,  0,1,         0,0);
+	TEST_MOD(LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
 	
 	// timespec_eq
 	
