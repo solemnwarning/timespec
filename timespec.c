@@ -192,6 +192,41 @@ struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)
 	return ts1;
 }
 
+/** \fn struct timespec timespec_min(struct timespec ts1, struct timespec ts2)
+ *  \brief Return the lesser one of the two given timespec values.
+*/
+struct timespec timespec_min(struct timespec ts1, struct timespec ts2) {
+	if(timespec_le(ts1, ts2)) {
+		return ts1;
+	} else {
+		return ts2;
+	}
+}
+
+/** \fn struct timespec timespec_max(struct timespec ts1, struct timespec ts2)
+ *  \brief Return the greater one of the two given timespec values.
+*/
+struct timespec timespec_max(struct timespec ts1, struct timespec ts2) {
+	if(timespec_ge(ts1, ts2)) {
+		return ts1;
+	} else {
+		return ts2;
+	}
+}
+
+/** \fn struct timespec timespec_clamp(struct timespec ts, struct timespec min, struct timespec max)
+ *  \brief Clamp the value of TS between MIN and MAX.
+*/
+struct timespec timespec_clamp(struct timespec ts, struct timespec min, struct timespec max) {
+	if(timespec_gt(ts, max)) {
+		return max;
+	}
+	if(timespec_lt(ts, min)) {
+		return min;
+	}
+	return ts;
+}
+
 /** \fn int timespec_cmp(struct timespec ts1, struct timespec ts2)
  *  \brief Returns (1, 0, -1) if ts1 is (greater than, equal to, less than) to ts2.
 */

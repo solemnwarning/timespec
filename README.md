@@ -43,6 +43,20 @@ Returns the result of subtracting ts2 from ts1.
 
 Returns the remainder left over after dividing ts1 by ts2.
 
+## Clamping
+
+`struct timespec timespec_min(struct timespec ts1, struct timespec ts2);`
+
+Return the lesser one of the two given timespec values.
+
+`struct timespec timespec_max(struct timespec ts1, struct timespec ts2);`
+
+Return the greater one of the two given timespec values.
+
+`struct timespec timespec_clamp(struct timespec ts1, struct timespec min, struct timespec max);`
+
+Clamp the value of TS between MIN and MAX.
+
 ## Comparison functions
 
 `int timespec_cmp(struct timespec ts1, struct timespec ts2)`
