@@ -587,6 +587,72 @@ int main()
 	TEST_BINOP(timespec_mod, LONG_MAX,0,  0,1,         0,0);
 	TEST_BINOP(timespec_mod, LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
 	
+	// timespec_min
+	
+	TEST_BINOP(timespec_min, 0,0,	      0,0,	   0,0);
+	TEST_BINOP(timespec_min, 0,0,	      1,0,	   0,0);
+	TEST_BINOP(timespec_min, 1,0,	      0,0,	   0,0);
+	TEST_BINOP(timespec_min, 1,0,	      1,0,	   1,0);
+	TEST_BINOP(timespec_min, 10,0,	      1,0,	   1,0);
+	TEST_BINOP(timespec_min, 10,0,	      3,0,	   3,0);
+	TEST_BINOP(timespec_min, 10,0,	      -3,0,	   -3,0);
+	TEST_BINOP(timespec_min, -10,0,	      3,0,	   -10,0);
+	TEST_BINOP(timespec_min, -10,0,	      -3,0,	   -10,0);
+	TEST_BINOP(timespec_min, 10,0,	      5,0,	   5,0);
+	TEST_BINOP(timespec_min, 10,0,	      -5,0,	   -5,0);
+	TEST_BINOP(timespec_min, -10,0,	      5,0,	   -10,0);
+	TEST_BINOP(timespec_min, -10,0,	      -5,0,	   -10,0);
+	TEST_BINOP(timespec_min, 1,500000000, 0,500000000, 0,500000000);
+	TEST_BINOP(timespec_min, 5,500000000, 2,999999999, 2,999999999);
+	TEST_BINOP(timespec_min, 0,500000000, 1,500000000, 0,500000000);
+	TEST_BINOP(timespec_min, 0,0,	      1,500000000, 0,0);
+	TEST_BINOP(timespec_min, 1,0,	      1,500000000, 1,0);
+	TEST_BINOP(timespec_min, 1,0,	      0,1,	   0,1);
+	TEST_BINOP(timespec_min, 1,123456789, 0,1000,	   0,1000);
+	TEST_BINOP(timespec_min, 1,0,	      0,9999999,   0,9999999);
+	TEST_BINOP(timespec_min, 12345,54321, 0,100001,	   0,100001);
+	TEST_BINOP(timespec_min, LONG_MIN,0,  0,1,	   LONG_MIN,0);
+	TEST_BINOP(timespec_min, LONG_MIN,0,  0,-1,	   LONG_MIN,0);
+	TEST_BINOP(timespec_min, LONG_MIN,0,  LONG_MAX,0,  LONG_MIN,0);
+	TEST_BINOP(timespec_min, LONG_MIN,0,  LONG_MIN,0,  LONG_MIN,0);
+	TEST_BINOP(timespec_min, LONG_MAX,0,  0,1,	   0,1);
+	TEST_BINOP(timespec_min, LONG_MAX,0,  0,-1,	   0,-1);
+	TEST_BINOP(timespec_min, LONG_MAX,0,  LONG_MAX,0,  LONG_MAX,0);
+	TEST_BINOP(timespec_min, LONG_MAX,0,  LONG_MIN,0,  LONG_MIN,0);
+	
+	// timespec_max
+	
+	TEST_BINOP(timespec_max, 0,0,	      0,0,	   0,0);
+	TEST_BINOP(timespec_max, 0,0,	      1,0,	   1,0);
+	TEST_BINOP(timespec_max, 1,0,	      0,0,	   1,0);
+	TEST_BINOP(timespec_max, 1,0,	      1,0,	   1,0);
+	TEST_BINOP(timespec_max, 10,0,	      1,0,	   10,0);
+	TEST_BINOP(timespec_max, 10,0,	      3,0,	   10,0);
+	TEST_BINOP(timespec_max, 10,0,	      -3,0,	   10,0);
+	TEST_BINOP(timespec_max, -10,0,	      3,0,	   3,0);
+	TEST_BINOP(timespec_max, -10,0,	      -3,0,	   -3,0);
+	TEST_BINOP(timespec_max, 10,0,	      5,0,	   10,0);
+	TEST_BINOP(timespec_max, 10,0,	      -5,0,	   10,0);
+	TEST_BINOP(timespec_max, -10,0,	      5,0,	   5,0);
+	TEST_BINOP(timespec_max, -10,0,	      -5,0,	   -5,0);
+	TEST_BINOP(timespec_max, 1,500000000, 0,500000000, 1,500000000);
+	TEST_BINOP(timespec_max, 5,500000000, 2,999999999, 5,500000000);
+	TEST_BINOP(timespec_max, 0,500000000, 1,500000000, 1,500000000);
+	TEST_BINOP(timespec_max, 0,0,	      1,500000000, 1,500000000);
+	TEST_BINOP(timespec_max, 1,0,	      1,500000000, 1,500000000);
+	TEST_BINOP(timespec_max, 1,0,	      0,1,	   1,0);
+	TEST_BINOP(timespec_max, 1,123456789, 0,1000,	   1,123456789);
+	TEST_BINOP(timespec_max, 1,0,	      0,9999999,   1,0);
+	TEST_BINOP(timespec_max, 12345,54321, 0,100001,	   12345,54321);
+	TEST_BINOP(timespec_max, LONG_MIN,0,  0,1,	   0,1);
+	TEST_BINOP(timespec_max, LONG_MIN,0,  0,-1,	   0,-1);
+	TEST_BINOP(timespec_max, LONG_MIN,0,  LONG_MAX,0,  LONG_MAX,0);
+	TEST_BINOP(timespec_max, LONG_MIN,0,  LONG_MIN,0,  LONG_MIN,0);
+	TEST_BINOP(timespec_max, LONG_MAX,0,  0,1,	   LONG_MAX,0);
+	TEST_BINOP(timespec_max, LONG_MAX,0,  0,-1,	   LONG_MAX,0);
+	TEST_BINOP(timespec_max, LONG_MAX,0,  LONG_MAX,0,  LONG_MAX,0);
+	TEST_BINOP(timespec_max, LONG_MAX,0,  LONG_MIN,0,  LONG_MAX,0);
+	
 	// timespec_cmp
 	
 	TEST_TEST_FUNC(timespec_cmp,    0,0,    0,0, 0);
