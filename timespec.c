@@ -443,6 +443,23 @@ struct timespec timespec_normalise(struct timespec ts)
 	} \
 }
 
+#define TEST_TRINOP(func, ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, ts3_sec, ts3_nsec, expect_sec, expect_nsec) { \
+	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
+	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
+	struct timespec ts3 = { .tv_sec = ts3_sec, .tv_nsec = ts3_nsec }; \
+	struct timespec got = func(ts1, ts2, ts3); \
+	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
+	{ \
+		printf(#func "({%ld, %ld}, {%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
+		       (long)(ts1_sec), (long)(ts1_nsec), \
+		       (long)(ts2_sec), (long)(ts2_nsec), \
+		       (long)(ts3_sec), (long)(ts3_nsec)); \
+		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
+		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
+		++result; \
+	} \
+}
+
 #define TEST_TEST_FUNC(func, ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect) { \
 	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
 	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
@@ -586,6 +603,66 @@ int main()
 	TEST_BINOP(timespec_mod, 12345,54321, 0,100001,    0,5555);
 	TEST_BINOP(timespec_mod, LONG_MAX,0,  0,1,         0,0);
 	TEST_BINOP(timespec_mod, LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
+	
+	// timespec_clamp
+	
+	TEST_TRINOP(timespec_clamp, 0,0,    0,0,   0,0,   0,0);
+	
+	TEST_TRINOP(timespec_clamp, 1000,0,    2000,0,   3000,0,   2000,0);
+	TEST_TRINOP(timespec_clamp, 1500,0,    2000,0,   3000,0,   2000,0);
+	TEST_TRINOP(timespec_clamp, 1999,0,    2000,0,   3000,0,   2000,0);
+	TEST_TRINOP(timespec_clamp, 2000,0,    2000,0,   3000,0,   2000,0);
+	TEST_TRINOP(timespec_clamp, 2001,0,    2000,0,   3000,0,   2001,0);
+	TEST_TRINOP(timespec_clamp, 2250,0,    2000,0,   3000,0,   2250,0);
+	TEST_TRINOP(timespec_clamp, 2500,0,    2000,0,   3000,0,   2500,0);
+	TEST_TRINOP(timespec_clamp, 2750,0,    2000,0,   3000,0,   2750,0);
+	TEST_TRINOP(timespec_clamp, 2999,0,    2000,0,   3000,0,   2999,0);
+	TEST_TRINOP(timespec_clamp, 3000,0,    2000,0,   3000,0,   3000,0);
+	TEST_TRINOP(timespec_clamp, 3001,0,    2000,0,   3000,0,   3000,0);
+	TEST_TRINOP(timespec_clamp, 3500,0,    2000,0,   3000,0,   3000,0);
+	TEST_TRINOP(timespec_clamp, 4000,0,    2000,0,   3000,0,   3000,0);
+	
+	TEST_TRINOP(timespec_clamp, 0,1000,    0,2000,   0,3000,   0,2000);
+	TEST_TRINOP(timespec_clamp, 0,1500,    0,2000,   0,3000,   0,2000);
+	TEST_TRINOP(timespec_clamp, 0,1999,    0,2000,   0,3000,   0,2000);
+	TEST_TRINOP(timespec_clamp, 0,2000,    0,2000,   0,3000,   0,2000);
+	TEST_TRINOP(timespec_clamp, 0,2001,    0,2000,   0,3000,   0,2001);
+	TEST_TRINOP(timespec_clamp, 0,2250,    0,2000,   0,3000,   0,2250);
+	TEST_TRINOP(timespec_clamp, 0,2500,    0,2000,   0,3000,   0,2500);
+	TEST_TRINOP(timespec_clamp, 0,2750,    0,2000,   0,3000,   0,2750);
+	TEST_TRINOP(timespec_clamp, 0,2999,    0,2000,   0,3000,   0,2999);
+	TEST_TRINOP(timespec_clamp, 0,3000,    0,2000,   0,3000,   0,3000);
+	TEST_TRINOP(timespec_clamp, 0,3001,    0,2000,   0,3000,   0,3000);
+	TEST_TRINOP(timespec_clamp, 0,3500,    0,2000,   0,3000,   0,3000);
+	TEST_TRINOP(timespec_clamp, 0,4000,    0,2000,   0,3000,   0,3000);
+	
+	TEST_TRINOP(timespec_clamp,0,-1000,   0,-3000,  0,-2000,  0,-2000);
+	TEST_TRINOP(timespec_clamp,0,-1500,   0,-3000,  0,-2000,  0,-2000);
+	TEST_TRINOP(timespec_clamp,0,-1999,   0,-3000,  0,-2000,  0,-2000);
+	TEST_TRINOP(timespec_clamp,0,-3000,   0,-3000,  0,-2000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-2001,   0,-3000,  0,-2000,  0,-2001);
+	TEST_TRINOP(timespec_clamp,0,-2250,   0,-3000,  0,-2000,  0,-2250);
+	TEST_TRINOP(timespec_clamp,0,-2500,   0,-3000,  0,-2000,  0,-2500);
+	TEST_TRINOP(timespec_clamp,0,-2750,   0,-3000,  0,-2000,  0,-2750);
+	TEST_TRINOP(timespec_clamp,0,-2999,   0,-3000,  0,-2000,  0,-2999);
+	TEST_TRINOP(timespec_clamp,0,-2000,   0,-3000,  0,-2000,  0,-2000);
+	TEST_TRINOP(timespec_clamp,0,-3001,   0,-3000,  0,-2000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-3500,   0,-3000,  0,-2000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-2000,   0,-3000,  0,-2000,  0,-2000);
+	
+	TEST_TRINOP(timespec_clamp,0,-4000,   0,-3000,  0,3000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-3001,   0,-3000,  0,3000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-3000,   0,-3000,  0,3000,  0,-3000);
+	TEST_TRINOP(timespec_clamp,0,-2999,   0,-3000,  0,3000,  0,-2999);
+	TEST_TRINOP(timespec_clamp,0,-1500,   0,-3000,  0,3000,  0,-1500);
+	TEST_TRINOP(timespec_clamp,0,   -1,   0,-3000,  0,3000,  0,   -1);
+	TEST_TRINOP(timespec_clamp,0,    0,   0,-3000,  0,3000,  0,    0);
+	TEST_TRINOP(timespec_clamp,0,    1,   0,-3000,  0,3000,  0,    1);
+	TEST_TRINOP(timespec_clamp,0, 1500,   0,-3000,  0,3000,  0, 1500);
+	TEST_TRINOP(timespec_clamp,0, 2999,   0,-3000,  0,3000,  0, 2999);
+	TEST_TRINOP(timespec_clamp,0, 3000,   0,-3000,  0,3000,  0, 3000);
+	TEST_TRINOP(timespec_clamp,0, 3001,   0,-3000,  0,3000,  0, 3000);
+	TEST_TRINOP(timespec_clamp,0, 4000,   0,-3000,  0,3000,  0, 3000);
 	
 	// timespec_min
 	
