@@ -429,41 +429,13 @@ struct timespec timespec_normalise(struct timespec ts)
 	} \
 }
 
-#define TEST_ADD(ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect_sec, expect_nsec) { \
+#define TEST_BINOP(func, ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect_sec, expect_nsec) { \
 	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
 	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
-	struct timespec got = timespec_add(ts1, ts2); \
+	struct timespec got = func(ts1, ts2); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("%s:%d: timespec_add({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
-			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
-		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
-		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		++result; \
-	} \
-}
-
-#define TEST_SUB(ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect_sec, expect_nsec) { \
-	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
-	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
-	struct timespec got = timespec_sub(ts1, ts2); \
-	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
-	{ \
-		printf("%s:%d: timespec_sub({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
-			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
-		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
-		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		++result; \
-	} \
-}
-
-#define TEST_MOD(ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect_sec, expect_nsec) { \
-	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
-	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
-	struct timespec got = timespec_mod(ts1, ts2); \
-	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
-	{ \
-		printf("%s:%d: timespec_mod({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
+		printf(#func "({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
@@ -562,58 +534,58 @@ int main()
 	
 	// timespec_add
 	
-	TEST_ADD(0,0,         0,0,         0,0);
-	TEST_ADD(0,0,         1,0,         1,0);
-	TEST_ADD(1,0,         0,0,         1,0);
-	TEST_ADD(1,0,         1,0,         2,0);
-	TEST_ADD(1,500000000, 1,0,         2,500000000);
-	TEST_ADD(1,0,         1,500000000, 2,500000000);
-	TEST_ADD(1,500000000, 1,500000000, 3,0);
-	TEST_ADD(1,500000000, 1,499999999, 2,999999999);
-	TEST_ADD(1,500000000, 1,500000000, 3,0);
-	TEST_ADD(1,999999999, 1,999999999, 3,999999998);
-	TEST_ADD(0,500000000, 1,500000000, 2,0);
-	TEST_ADD(1,500000000, 0,500000000, 2,0);
+	TEST_BINOP(timespec_add, 0,0,         0,0,         0,0);
+	TEST_BINOP(timespec_add, 0,0,         1,0,         1,0);
+	TEST_BINOP(timespec_add, 1,0,         0,0,         1,0);
+	TEST_BINOP(timespec_add, 1,0,         1,0,         2,0);
+	TEST_BINOP(timespec_add, 1,500000000, 1,0,         2,500000000);
+	TEST_BINOP(timespec_add, 1,0,         1,500000000, 2,500000000);
+	TEST_BINOP(timespec_add, 1,500000000, 1,500000000, 3,0);
+	TEST_BINOP(timespec_add, 1,500000000, 1,499999999, 2,999999999);
+	TEST_BINOP(timespec_add, 1,500000000, 1,500000000, 3,0);
+	TEST_BINOP(timespec_add, 1,999999999, 1,999999999, 3,999999998);
+	TEST_BINOP(timespec_add, 0,500000000, 1,500000000, 2,0);
+	TEST_BINOP(timespec_add, 1,500000000, 0,500000000, 2,0);
 	
 	// timespec_sub
 	
-	TEST_SUB(0,0,         0,0,         0,0);
-	TEST_SUB(1,0,         0,0,         1,0);
-	TEST_SUB(1,0,         1,0,         0,0);
-	TEST_SUB(1,500000000, 0,500000000, 1,0);
-	TEST_SUB(5,500000000, 2,999999999, 2,500000001);
-	TEST_SUB(0,0,         1,0,         -1,0);
-	TEST_SUB(0,500000000, 1,500000000, -1,0);
-	TEST_SUB(0,0,         1,500000000, -2,500000000);
-	TEST_SUB(1,0,         1,500000000, -1,500000000);
-	TEST_SUB(1,0,         1,499999999, -1,500000001);
-
+	TEST_BINOP(timespec_sub, 0,0,         0,0,         0,0);
+	TEST_BINOP(timespec_sub, 1,0,         0,0,         1,0);
+	TEST_BINOP(timespec_sub, 1,0,         1,0,         0,0);
+	TEST_BINOP(timespec_sub, 1,500000000, 0,500000000, 1,0);
+	TEST_BINOP(timespec_sub, 5,500000000, 2,999999999, 2,500000001);
+	TEST_BINOP(timespec_sub, 0,0,         1,0,         -1,0);
+	TEST_BINOP(timespec_sub, 0,500000000, 1,500000000, -1,0);
+	TEST_BINOP(timespec_sub, 0,0,         1,500000000, -1,-500000000);
+	TEST_BINOP(timespec_sub, 1,0,         1,500000000, 0,-500000000);
+	TEST_BINOP(timespec_sub, 1,0,         1,499999999, 0,-499999999);
+	
 	// timespec_mod
-
-	TEST_MOD(0,0,         0,0,         0,0);
-	TEST_MOD(0,0,         1,0,         0,0);
-	TEST_MOD(1,0,         0,0,         1,0);
-	TEST_MOD(1,0,         1,0,         0,0);
-	TEST_MOD(10,0,        1,0,         0,0);
-	TEST_MOD(10,0,        3,0,         1,0);
-	TEST_MOD(10,0,        -3,0,        -2,0);
-	TEST_MOD(-10,0,       3,0,         2,0);
-	TEST_MOD(-10,0,       -3,0,        -1,0);
-	TEST_MOD(10,0,        5,0,         0,0);
-	TEST_MOD(10,0,        -5,0,        0,0);
-	TEST_MOD(-10,0,       5,0,         0,0);
-	TEST_MOD(-10,0,       -5,0,        0,0);
-	TEST_MOD(1,500000000, 0,500000000, 0,0);
-	TEST_MOD(5,500000000, 2,999999999, 2,500000001);
-	TEST_MOD(0,500000000, 1,500000000, 0,500000000);
-	TEST_MOD(0,0,         1,500000000, 0,0);
-	TEST_MOD(1,0,         1,500000000, 1,0);
-	TEST_MOD(1,0,         0,1,         0,0);
-	TEST_MOD(1,123456789, 0,1000,      0,789);
-	TEST_MOD(1,0,         0,9999999,   0,100);
-	TEST_MOD(12345,54321, 0,100001,    0,5555);
-	TEST_MOD(LONG_MAX,0,  0,1,         0,0);
-	TEST_MOD(LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
+	
+	TEST_BINOP(timespec_mod, 0,0,         0,0,         0,0);
+	TEST_BINOP(timespec_mod, 0,0,         1,0,         0,0);
+	TEST_BINOP(timespec_mod, 1,0,         0,0,         1,0);
+	TEST_BINOP(timespec_mod, 1,0,         1,0,         0,0);
+	TEST_BINOP(timespec_mod, 10,0,        1,0,         0,0);
+	TEST_BINOP(timespec_mod, 10,0,        3,0,         1,0);
+	TEST_BINOP(timespec_mod, 10,0,        -3,0,        -2,0);
+	TEST_BINOP(timespec_mod, -10,0,       3,0,         2,0);
+	TEST_BINOP(timespec_mod, -10,0,       -3,0,        -1,0);
+	TEST_BINOP(timespec_mod, 10,0,        5,0,         0,0);
+	TEST_BINOP(timespec_mod, 10,0,        -5,0,        0,0);
+	TEST_BINOP(timespec_mod, -10,0,       5,0,         0,0);
+	TEST_BINOP(timespec_mod, -10,0,       -5,0,        0,0);
+	TEST_BINOP(timespec_mod, 1,500000000, 0,500000000, 0,0);
+	TEST_BINOP(timespec_mod, 5,500000000, 2,999999999, 2,500000001);
+	TEST_BINOP(timespec_mod, 0,500000000, 1,500000000, 0,500000000);
+	TEST_BINOP(timespec_mod, 0,0,         1,500000000, 0,0);
+	TEST_BINOP(timespec_mod, 1,0,         1,500000000, 1,0);
+	TEST_BINOP(timespec_mod, 1,0,         0,1,         0,0);
+	TEST_BINOP(timespec_mod, 1,123456789, 0,1000,      0,789);
+	TEST_BINOP(timespec_mod, 1,0,         0,9999999,   0,100);
+	TEST_BINOP(timespec_mod, 12345,54321, 0,100001,    0,5555);
+	TEST_BINOP(timespec_mod, LONG_MAX,0,  0,1,         0,0);
+	TEST_BINOP(timespec_mod, LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
 	
 	// timespec_cmp
 	
