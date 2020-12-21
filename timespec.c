@@ -307,14 +307,11 @@ long timespec_to_ms(struct timespec ts)
  * Returns a normalised version of a timespec structure, according to the
  * following rules:
  *
- * 1) If tv_nsec is >1,000,000,00 or <-1,000,000,000, flatten the surplus
+ * 1) If tv_nsec is >=1,000,000,00 or <=-1,000,000,000, flatten the surplus
  *    nanoseconds into the tv_sec field.
  *
- * 2) If tv_sec is >0 and tv_nsec is <0, decrement tv_sec and roll tv_nsec up
- *    to represent the same value on the positive side of the new tv_sec.
- *
- * 3) If tv_sec is <0 and tv_nsec is >0, increment tv_sec and roll tv_nsec down
- *    to represent the same value on the negative side of the new tv_sec.
+ * 2) If tv_nsec is negative, decrement tv_sec and roll tv_nsec up to represent
+ *    the same value attainable by ADDING nanoseconds to tv_sec.
 */
 struct timespec timespec_normalise(struct timespec ts)
 {
@@ -330,23 +327,14 @@ struct timespec timespec_normalise(struct timespec ts)
 		ts.tv_nsec += NSEC_PER_SEC;
 	}
 	
-	if(ts.tv_nsec < 0 && ts.tv_sec > 0)
+	if(ts.tv_nsec < 0)
 	{
-		/* Negative nanoseconds while seconds is positive.
+		/* Negative nanoseconds isn't valid according to POSIX.
 		 * Decrement tv_sec and roll tv_nsec over.
 		*/
 		
 		--(ts.tv_sec);
-		ts.tv_nsec = NSEC_PER_SEC - (-1 * ts.tv_nsec);
-	}
-	else if(ts.tv_nsec > 0 && ts.tv_sec < 0)
-	{
-		/* Positive nanoseconds while seconds is negative.
-		 * Increment tv_sec and roll tv_nsec over.
-		*/
-		
-		++(ts.tv_sec);
-		ts.tv_nsec = -NSEC_PER_SEC - (-1 * ts.tv_nsec);
+		ts.tv_nsec = (NSEC_PER_SEC + ts.tv_nsec);
 	}
 	
 	return ts;
@@ -521,9 +509,9 @@ int main()
 	TEST_SUB(5,500000000, 2,999999999, 2,500000001);
 	TEST_SUB(0,0,         1,0,         -1,0);
 	TEST_SUB(0,500000000, 1,500000000, -1,0);
-	TEST_SUB(0,0,         1,500000000, -1,-500000000);
-	TEST_SUB(1,0,         1,500000000, 0,-500000000);
-	TEST_SUB(1,0,         1,499999999, 0,-499999999);
+	TEST_SUB(0,0,         1,500000000, -2,500000000);
+	TEST_SUB(1,0,         1,500000000, -1,500000000);
+	TEST_SUB(1,0,         1,499999999, -1,500000001);
 
 	// timespec_mod
 
@@ -619,9 +607,9 @@ int main()
 	TEST_FROM_DOUBLE(10.0,  10,0);
 	TEST_FROM_DOUBLE(-10.0, -10,0);
 	TEST_FROM_DOUBLE(0.5,   0,500000000);
-	TEST_FROM_DOUBLE(-0.5,  0,-500000000);
+	TEST_FROM_DOUBLE(-0.5,  -1,500000000);
 	TEST_FROM_DOUBLE(10.5,  10,500000000);
-	TEST_FROM_DOUBLE(-10.5, -10,-500000000);
+	TEST_FROM_DOUBLE(-10.5, -11,500000000);
 	
 	// timespec_to_double
 	
@@ -648,8 +636,8 @@ int main()
 	TEST_FROM_TIMEVAL(1,1000,   1,1000000);
 	TEST_FROM_TIMEVAL(1,-1,     0,999999000);
 	TEST_FROM_TIMEVAL(1,-1000,  0,999000000);
-	TEST_FROM_TIMEVAL(-1,-1,    -1,-1000);
-	TEST_FROM_TIMEVAL(-1,-1000, -1,-1000000);
+	TEST_FROM_TIMEVAL(-1,-1,    -2,999999000);
+	TEST_FROM_TIMEVAL(-1,-1000, -2,999000000);
 	
 	// timespec_to_timeval
 	
@@ -673,25 +661,25 @@ int main()
 	TEST_TO_TIMEVAL(1,-2000,    0,999998);
 	TEST_TO_TIMEVAL(1,-2000000, 0,998000);
 	
-	TEST_TO_TIMEVAL(-1,-1,       -1,0);
-	TEST_TO_TIMEVAL(-1,-999,     -1,0);
-	TEST_TO_TIMEVAL(-1,-1000,    -1,-1);
-	TEST_TO_TIMEVAL(-1,-1001,    -1,-1);
-	TEST_TO_TIMEVAL(-1,-2000,    -1,-2);
-	TEST_TO_TIMEVAL(-1,-2000000, -1,-2000);
+	TEST_TO_TIMEVAL(-1,-1,       -2,999999);
+	TEST_TO_TIMEVAL(-1,-999,     -2,999999);
+	TEST_TO_TIMEVAL(-1,-1000,    -2,999999);
+	TEST_TO_TIMEVAL(-1,-1001,    -2,999998);
+	TEST_TO_TIMEVAL(-1,-2000,    -2,999998);
+	TEST_TO_TIMEVAL(-1,-2000000, -2,998000);
 	
 	TEST_TO_TIMEVAL(1,1500000000,   2,500000);
-	TEST_TO_TIMEVAL(1,-1500000000,  0,-500000);
-	TEST_TO_TIMEVAL(-1,-1500000000, -2,-500000);
+	TEST_TO_TIMEVAL(1,-1500000000,  -1,500000);
+	TEST_TO_TIMEVAL(-1,-1500000000, -3,500000);
 	
 	// timespec_from_ms
 	
 	TEST_FROM_MS(0,     0,0);
 	TEST_FROM_MS(1,     0,1000000);
-	TEST_FROM_MS(-1,    0,-1000000);
+	TEST_FROM_MS(-1,    -1,999000000);
 	TEST_FROM_MS(1500,  1,500000000);
 	TEST_FROM_MS(-1000, -1,0);
-	TEST_FROM_MS(-1500, -1,-500000000);
+	TEST_FROM_MS(-1500, -2,500000000);
 	
 	// timespec_to_ms
 	
@@ -712,24 +700,25 @@ int main()
 	TEST_NORMALISE(0,1000000000,  1,0);
 	TEST_NORMALISE(0,1500000000,  1,500000000);
 	TEST_NORMALISE(0,-1000000000, -1,0);
-	TEST_NORMALISE(0,-1500000000, -1,-500000000);
+	TEST_NORMALISE(0,-1500000000, -2,500000000);
 	
 	TEST_NORMALISE(5,1000000000,   6,0);
 	TEST_NORMALISE(5,1500000000,   6,500000000);
 	TEST_NORMALISE(-5,-1000000000, -6,0);
-	TEST_NORMALISE(-5,-1500000000, -6,-500000000);
+	TEST_NORMALISE(-5,-1500000000, -7,500000000);
 	
 	TEST_NORMALISE(0,2000000000,  2,0);
 	TEST_NORMALISE(0,2100000000,  2,100000000);
 	TEST_NORMALISE(0,-2000000000, -2,0);
-	TEST_NORMALISE(0,-2100000000, -2,-100000000);
+	TEST_NORMALISE(0,-2100000000, -3,900000000);
 	
 	TEST_NORMALISE(1,-500000001,  0,499999999);
 	TEST_NORMALISE(1,-500000000,  0,500000000);
 	TEST_NORMALISE(1,-499999999,  0,500000001);
+	TEST_NORMALISE(0,-499999999,  -1,500000001);
 	
-	TEST_NORMALISE(-1,500000000,  0,-500000000);
-	TEST_NORMALISE(-1,499999999,  0,-500000001);
+	TEST_NORMALISE(-1,500000000,  -1,500000000);
+	TEST_NORMALISE(-1,499999999,  -1,499999999);
 	
 	if(result > 0)
 	{
