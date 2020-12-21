@@ -196,6 +196,9 @@ struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)
 */
 bool timespec_eq(struct timespec ts1, struct timespec ts2)
 {
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
 	return (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec == ts2.tv_nsec);
 }
 
@@ -204,6 +207,9 @@ bool timespec_eq(struct timespec ts1, struct timespec ts2)
 */
 bool timespec_gt(struct timespec ts1, struct timespec ts2)
 {
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
 	return (ts1.tv_sec > ts2.tv_sec || (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec > ts2.tv_nsec));
 }
 
@@ -212,6 +218,9 @@ bool timespec_gt(struct timespec ts1, struct timespec ts2)
 */
 bool timespec_ge(struct timespec ts1, struct timespec ts2)
 {
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
 	return (ts1.tv_sec > ts2.tv_sec || (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec >= ts2.tv_nsec));
 }
 
@@ -220,6 +229,9 @@ bool timespec_ge(struct timespec ts1, struct timespec ts2)
 */
 bool timespec_lt(struct timespec ts1, struct timespec ts2)
 {
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
 	return (ts1.tv_sec < ts2.tv_sec || (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec < ts2.tv_nsec));
 }
 
@@ -228,6 +240,9 @@ bool timespec_lt(struct timespec ts1, struct timespec ts2)
 */
 bool timespec_le(struct timespec ts1, struct timespec ts2)
 {
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
 	return (ts1.tv_sec < ts2.tv_sec || (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec <= ts2.tv_nsec));
 }
 
@@ -553,6 +568,11 @@ int main()
 	TEST_TEST_FUNC(timespec_eq, -100,0, 100,0,  false);
 	TEST_TEST_FUNC(timespec_eq, 0,10,   0,-10,  false);
 	
+	TEST_TEST_FUNC(timespec_eq,          -0,-0,           0,0,  true);
+	TEST_TEST_FUNC(timespec_eq, -10,-500000000, -11,500000000,  true);
+	TEST_TEST_FUNC(timespec_eq, -10,-500000001, -11,499999999,  true);
+	TEST_TEST_FUNC(timespec_eq, -10,-500000001, -11,500000001,  false);
+	
 	// timespec_gt
 	
 	TEST_TEST_FUNC(timespec_gt, 1,0, 0,0,  true);
@@ -564,6 +584,14 @@ int main()
 	TEST_TEST_FUNC(timespec_gt, 1,1,  1,1, false);
 	TEST_TEST_FUNC(timespec_gt, -1,0, 0,0, false);
 	TEST_TEST_FUNC(timespec_gt, 0,-1, 0,0, false);
+	
+	TEST_TEST_FUNC(timespec_gt,            0,0,           -0,-0,  false);
+	TEST_TEST_FUNC(timespec_gt, -10,-500000000,   -11,500000000,  false);
+	TEST_TEST_FUNC(timespec_gt,  -11,500000000,  -10,-500000000,  false);
+	TEST_TEST_FUNC(timespec_gt, -10,-500000001,   -11,499999999,  false);
+	TEST_TEST_FUNC(timespec_gt,  -11,499999999,   -11,499999999,  false);
+	TEST_TEST_FUNC(timespec_gt, -10,-500000001,   -11,500000001,  false);
+	TEST_TEST_FUNC(timespec_gt,  -11,500000001,  -10,-500000001,  true);
 	
 	// timespec_ge
 	
@@ -577,6 +605,14 @@ int main()
 	TEST_TEST_FUNC(timespec_ge, -1,0, 0,0, false);
 	TEST_TEST_FUNC(timespec_ge, 0,-1, 0,0, false);
 	
+	TEST_TEST_FUNC(timespec_ge,            0,0,           -0,-0,  true);
+	TEST_TEST_FUNC(timespec_ge, -10,-500000000,   -11,500000000,  true);
+	TEST_TEST_FUNC(timespec_ge,  -11,500000000,  -10,-500000000,  true);
+	TEST_TEST_FUNC(timespec_ge, -10,-500000001,   -11,499999999,  true);
+	TEST_TEST_FUNC(timespec_ge,  -11,499999999,   -11,499999999,  true);
+	TEST_TEST_FUNC(timespec_ge, -10,-500000001,   -11,500000001,  false);
+	TEST_TEST_FUNC(timespec_ge,  -11,500000001,  -10,-500000001,  true);
+	
 	// timespec_lt
 	
 	TEST_TEST_FUNC(timespec_lt, 0,0,  1,0, true);
@@ -589,6 +625,14 @@ int main()
 	TEST_TEST_FUNC(timespec_lt, 0,0, -1,0, false);
 	TEST_TEST_FUNC(timespec_lt, 0,0, 0,-1, false);
 	
+	TEST_TEST_FUNC(timespec_lt,            0,0,           -0,-0,  false);
+	TEST_TEST_FUNC(timespec_lt, -10,-500000000,   -11,500000000,  false);
+	TEST_TEST_FUNC(timespec_lt,  -11,500000000,  -10,-500000000,  false);
+	TEST_TEST_FUNC(timespec_lt, -10,-500000001,   -11,499999999,  false);
+	TEST_TEST_FUNC(timespec_lt,  -11,499999999,   -11,499999999,  false);
+	TEST_TEST_FUNC(timespec_lt, -10,-500000001,   -11,500000001,  true);
+	TEST_TEST_FUNC(timespec_lt,  -11,500000001,  -10,-500000001,  false);
+	
 	// timespec_le
 	
 	TEST_TEST_FUNC(timespec_le, 0,0, 1,0,  true);
@@ -600,6 +644,14 @@ int main()
 	
 	TEST_TEST_FUNC(timespec_le, 0,0, -1,0, false);
 	TEST_TEST_FUNC(timespec_le, 0,0, 0,-1, false);
+	
+	TEST_TEST_FUNC(timespec_le,            0,0,           -0,-0,  true);
+	TEST_TEST_FUNC(timespec_le, -10,-500000000,   -11,500000000,  true);
+	TEST_TEST_FUNC(timespec_le,  -11,500000000,  -10,-500000000,  true);
+	TEST_TEST_FUNC(timespec_le, -10,-500000001,   -11,499999999,  true);
+	TEST_TEST_FUNC(timespec_le,  -11,499999999,   -11,499999999,  true);
+	TEST_TEST_FUNC(timespec_le, -10,-500000001,   -11,500000001,  true);
+	TEST_TEST_FUNC(timespec_le,  -11,500000001,  -10,-500000001,  false);
 	
 	// timespec_from_double
 	
