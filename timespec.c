@@ -360,10 +360,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_normalise(in); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_normalise({%ld, %ld}) returned wrong values\n", (long)(ts_sec), (long)(ts_nsec)); \
+		printf("%s:%d: timespec_normalise({%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
+			(long)(ts_sec), (long)(ts_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -373,11 +374,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_add(ts1, ts2); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_add({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
+		printf("%s:%d: timespec_add({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -387,11 +388,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_sub(ts1, ts2); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_sub({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
+		printf("%s:%d: timespec_sub({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -401,11 +402,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_mod(ts1, ts2); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_mod({%ld, %ld}, {%ld, %ld}) returned wrong values\n", \
+		printf("%s:%d: timespec_mod({%ld, %ld}, {%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -413,10 +414,10 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
 	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
 	if(func(ts1, ts2) != expect) { \
-		printf(#func "({%ld, %ld}, {%ld, %ld}) returned %s\n", \
+		printf("%s:%d: " #func "({%ld, %ld}, {%ld, %ld}) returned %s\n", __FILE__, __LINE__, \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec), \
 			(expect ? "FALSE" : "TRUE")); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -424,10 +425,10 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_from_double(d_secs);  \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_from_double(%f) returned wrong values\n", (double)(d_secs)); \
+		printf("%s:%d: timespec_from_double(%f) returned wrong values\n", __FILE__, __LINE__, (double)(d_secs)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -435,10 +436,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec ts = { .tv_sec = ts_sec, .tv_nsec = ts_nsec }; \
 	double got = timespec_to_double(ts); \
 	if(got != expect) { \
-		printf("timespec_to_double({%ld, %ld}) returned wrong value\n", (long)(ts_sec), (long)(ts_nsec)); \
+		printf("%s:%d: timespec_to_double({%ld, %ld}) returned wrong value\n", __FILE__, __LINE__, \
+			(long)(ts_sec), (long)(ts_nsec)); \
 		printf("    Expected: %f\n", (double)(expect)); \
 		printf("    Got:      %f\n", got); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -447,10 +449,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_from_timeval(tv); \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_from_timeval({%ld, %ld}) returned wrong values\n", (long)(in_sec), (long)(in_usec)); \
+		printf("%s:%d: timespec_from_timeval({%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
+			(long)(in_sec), (long)(in_usec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -459,10 +462,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timeval got = timespec_to_timeval(ts); \
 	if(got.tv_sec != expect_sec || got.tv_usec != expect_usec) \
 	{ \
-		printf("timespec_to_timeval({%ld, %ld}) returned wrong values\n", (long)(ts_sec), (long)(ts_nsec)); \
+		printf("%s:%d: timespec_to_timeval({%ld, %ld}) returned wrong values\n", __FILE__, __LINE__, \
+			(long)(ts_sec), (long)(ts_nsec)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_usec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_usec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -470,10 +474,10 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec got = timespec_from_ms(msecs);  \
 	if(got.tv_sec != expect_sec || got.tv_nsec != expect_nsec) \
 	{ \
-		printf("timespec_from_ms(%ld) returned wrong values\n", (long)(msecs)); \
+		printf("%s:%d: timespec_from_ms(%ld) returned wrong values\n", __FILE__, __LINE__, (long)(msecs)); \
 		printf("    Expected: {%ld, %ld}\n", (long)(expect_sec), (long)(expect_nsec)); \
 		printf("    Got:      {%ld, %ld}\n", (long)(got.tv_sec), (long)(got.tv_nsec)); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -481,10 +485,11 @@ struct timespec timespec_normalise(struct timespec ts)
 	struct timespec ts = { .tv_sec = ts_sec, .tv_nsec = ts_nsec }; \
 	long got = timespec_to_ms(ts); \
 	if(got != expect) { \
-		printf("timespec_to_ms({%ld, %ld}) returned wrong value\n", (long)(ts_sec), (long)(ts_nsec)); \
+		printf("%s:%d: timespec_to_ms({%ld, %ld}) returned wrong value\n", __FILE__, __LINE__, \
+			(long)(ts_sec), (long)(ts_nsec)); \
 		printf("    Expected: %ld\n", (long)(expect)); \
 		printf("    Got:      %ld\n", got); \
-		result = 1; \
+		++result; \
 	} \
 }
 
@@ -734,6 +739,6 @@ int main()
 		printf("All tests passed\n");
 	}
 	
-	return result;
+	return !!result; /* Don't overflow the exit status */
 }
 #endif
