@@ -98,11 +98,8 @@ Converts a timespec to an integer number of milliseconds.
 Returns a normalised version of a timespec structure, according to the following
 rules:
 
-1. If tv_nsec is >=1,000,000,000 or <=-1,000,000,000, flatten the surplus
+1. If tv_nsec is >=1,000,000,00 or <=-1,000,000,000, flatten the surplus
    nanoseconds into the tv_sec field.
 
-2. If tv_sec is >0 and tv_nsec is <0, decrement tv_sec and roll tv_nsec up to
-   represent the same value on the positive side of the new tv_sec.
-
-3. If tv_sec is <0 and tv_nsec is >0, increment tv_sec and roll tv_nsec down to
-   represent the same value on the negative side of the new tv_sec.
+2. If tv_nsec is negative, decrement tv_sec and roll tv_nsec up to represent
+   the same value attainable by ADDING nanoseconds to tv_sec.
