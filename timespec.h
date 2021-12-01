@@ -1,7 +1,7 @@
 /* Functions for working with timespec structures
  * Written by Daniel Collins (2017-2021)
  * timespec_mod by Alex Forencich (2019)
- * timespec_cmp by @promovicz (2021)
+ * Various contributions by Ingo Albrecht (2021)
  *
  * This is free and unencumbered software released into the public domain.
  *
