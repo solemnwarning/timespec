@@ -1,7 +1,8 @@
 /* Functions for working with timespec structures
- * Written by Daniel Collins (2017)
+ * Written by Daniel Collins (2017-2021)
  * timespec_mod by Alex Forencich (2019)
- * 
+ * timespec_cmp by @promovicz (2021)
+ *
  * This is free and unencumbered software released into the public domain.
  *
  * Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -43,6 +44,7 @@ struct timespec timespec_add(struct timespec ts1, struct timespec ts2);
 struct timespec timespec_sub(struct timespec ts1, struct timespec ts2);
 struct timespec timespec_mod(struct timespec ts1, struct timespec ts2);
 
+int timespec_cmp(struct timespec ts1, struct timespec ts2);
 bool timespec_eq(struct timespec ts1, struct timespec ts2);
 bool timespec_gt(struct timespec ts1, struct timespec ts2);
 bool timespec_ge(struct timespec ts1, struct timespec ts2);

@@ -1,7 +1,8 @@
 /* Functions for working with timespec structures
- * Written by Daniel Collins (2017)
+ * Written by Daniel Collins (2017-2021)
  * timespec_mod by Alex Forencich (2019)
- * 
+ * timespec_cmp by @promovicz (2021)
+ *
  * This is free and unencumbered software released into the public domain.
  *
  * Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -189,6 +190,28 @@ struct timespec timespec_mod(struct timespec ts1, struct timespec ts2)
 	}
 
 	return ts1;
+}
+
+/** \fn int timespec_cmp(struct timespec ts1, struct timespec ts2)
+ *  \brief Returns (1, 0, -1) if ts1 is (greater than, equal to, less than) to ts2.
+*/
+int timespec_cmp(struct timespec ts1, struct timespec ts2)
+{
+	ts1 = timespec_normalise(ts1);
+	ts2 = timespec_normalise(ts2);
+	
+	if(ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec == ts2.tv_nsec)
+	{
+		return 0;
+	}
+	else if((ts1.tv_sec > ts2.tv_sec)
+		  || (ts1.tv_sec == ts2.tv_sec && ts1.tv_nsec > ts2.tv_nsec))
+	{
+		return 1;
+	}
+	else {
+		return -1;
+	}
 }
 
 /** \fn bool timespec_eq(struct timespec ts1, struct timespec ts2)
@@ -416,10 +439,12 @@ struct timespec timespec_normalise(struct timespec ts)
 #define TEST_TEST_FUNC(func, ts1_sec, ts1_nsec, ts2_sec, ts2_nsec, expect) { \
 	struct timespec ts1 = { .tv_sec = ts1_sec, .tv_nsec = ts1_nsec }; \
 	struct timespec ts2 = { .tv_sec = ts2_sec, .tv_nsec = ts2_nsec }; \
-	if(func(ts1, ts2) != expect) { \
-		printf("%s:%d: " #func "({%ld, %ld}, {%ld, %ld}) returned %s\n", __FILE__, __LINE__, \
+	int got = func(ts1, ts2); \
+	if(got != expect) \
+	{ \
+		printf("%s:%d: " #func "({%ld, %ld}, {%ld, %ld}) returned %d, expected %s\n", __FILE__, __LINE__, \
 			(long)(ts1_sec), (long)(ts1_nsec), (long)(ts2_sec), (long)(ts2_nsec), \
-			(expect ? "FALSE" : "TRUE")); \
+			got, #expect); \
 		++result; \
 	} \
 }
@@ -554,6 +579,25 @@ int main()
 	TEST_MOD(12345,54321, 0,100001,    0,5555);
 	TEST_MOD(LONG_MAX,0,  0,1,         0,0);
 	TEST_MOD(LONG_MAX,0,  LONG_MAX,1,  LONG_MAX,0);
+	
+	// timespec_cmp
+	
+	TEST_TEST_FUNC(timespec_cmp,    0,0,    0,0, 0);
+	TEST_TEST_FUNC(timespec_cmp,  100,0,  100,0, 0);
+	TEST_TEST_FUNC(timespec_cmp, -100,0, -100,0, 0);
+	
+	TEST_TEST_FUNC(timespec_cmp,    1,0,    0,0,  1);
+	TEST_TEST_FUNC(timespec_cmp,    0,0,    1,0, -1);
+	TEST_TEST_FUNC(timespec_cmp,    0,1,    0,0,  1);
+	TEST_TEST_FUNC(timespec_cmp,    0,0,    0,1, -1);
+	TEST_TEST_FUNC(timespec_cmp,    1,0,  0,100,  1);
+	TEST_TEST_FUNC(timespec_cmp,  0,100   , 1,0, -1);
+	
+	TEST_TEST_FUNC(timespec_cmp,          -0,-0,            0,0,  0);
+	TEST_TEST_FUNC(timespec_cmp, -10,-500000000,  -11,500000000,  0);
+	TEST_TEST_FUNC(timespec_cmp, -10,-500000001,  -11,499999999,  0);
+	TEST_TEST_FUNC(timespec_cmp, -10,-500000001,  -11,500000001, -1);
+	TEST_TEST_FUNC(timespec_cmp,  -11,500000001, -10,-500000001,  1);
 	
 	// timespec_eq
 	

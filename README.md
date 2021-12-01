@@ -45,6 +45,10 @@ Returns the remainder left over after dividing ts1 by ts2.
 
 ## Comparison functions
 
+`int timespec_cmp(struct timespec ts1, struct timespec ts2)`
+
+Returns (1, 0, -1) if ts1 is (greater than, equal to, less than) ts2.
+
 `bool timespec_eq(struct timespec ts1, struct timespec ts2)`
 
 Returns true if the two timespec structures are equal.
