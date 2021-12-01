@@ -556,9 +556,9 @@ int main()
 	TEST_BINOP(timespec_sub, 5,500000000, 2,999999999, 2,500000001);
 	TEST_BINOP(timespec_sub, 0,0,         1,0,         -1,0);
 	TEST_BINOP(timespec_sub, 0,500000000, 1,500000000, -1,0);
-	TEST_BINOP(timespec_sub, 0,0,         1,500000000, -1,-500000000);
-	TEST_BINOP(timespec_sub, 1,0,         1,500000000, 0,-500000000);
-	TEST_BINOP(timespec_sub, 1,0,         1,499999999, 0,-499999999);
+	TEST_BINOP(timespec_sub, 0,0,         1,500000000, -2,500000000);
+	TEST_BINOP(timespec_sub, 1,0,         1,500000000, -1,500000000);
+	TEST_BINOP(timespec_sub, 1,0,         1,499999999, -1,500000001);
 	
 	// timespec_mod
 	
